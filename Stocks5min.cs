@@ -27,11 +27,11 @@ namespace Multi
             List<Stocks5min> stockList = new List<Stocks5min>(); // and month([_datetime]) >= '" + month + "' // year([_datetime]) >= '" + year + "' and // OandaTbl4Hours
             using (SqlConnection connection = new SqlConnection(conn)) // datain1dayallSTK // datain1hourallSTK // datain5minallSTK // datain1minallSTK // datain1hour1month // datain15min1month
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1day1year] WHERE LEFT([unixdatetime], 4) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
-            // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hour1month] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
+            using (SqlCommand command = new SqlCommand("SELECT TOP 100000000000 * FROM [datain1hour1month] WHERE year([_datetime]) = '" + year + "'and month([_datetime]) = '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1dayallSTK] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hourallSTK] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
-            // Oanda Tbl
-            using (SqlCommand command = new SqlCommand("SELECT TOP 100000000000000 * FROM [OandaTbl] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
+            // // Oanda Tbl
+            // using (SqlCommand command = new SqlCommand("SELECT TOP 100000000000000 * FROM [OandaTbl] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             {
                 connection.Open();
                 using (SqlDataReader reader = command.ExecuteReader())
@@ -55,13 +55,12 @@ namespace Multi
             }
             int LastIndex = stockList.Count;
             stockList.Reverse();
-            foreach (Stock s in stockList)
+            foreach (Stocks5min s in stockList)
             {
                 DateTime currentTime = s.Date;
                 s.Speed = (int)((DateTimeOffset)currentTime).ToUnixTimeSeconds();
                 int index = stockList.IndexOf(s);
                 #region High / Low // bottoms
-                s.Mid = s.Low + (s.High - s.Low) * 0.50; // s.Close
                 try
                 {
                     if (index != 0 && index != LastIndex - 1)
@@ -82,11 +81,6 @@ namespace Multi
                 }
                 #endregion
                 // stockList.Reverse();
-            }
-            foreach (Stocks5min s in stockList)
-            {
-                DateTime currentTime = s.Date;
-                s.Speed = (int)((DateTimeOffset)currentTime).ToUnixTimeSeconds();
             }
             return stockList;
         }

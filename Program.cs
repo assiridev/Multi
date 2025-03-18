@@ -10,7 +10,7 @@ namespace Multi
         static void Main(string[] args)
         {
             #region  IB forex data
-            string[] Shares = { //"AUD.NZD" };
+            string[] Shares = { //"EUR.USD" };
             "EUR.AUD", "AUD.CAD", "EUR.CAD", "GBP.CAD", "NZD.CAD", "USD.CAD", "AUD.CHF", "CAD.CHF", "EUR.CHF",
                 "GBP.CHF", "NZD.CHF", "USD.CHF", "EUR.GBP", "AUD.NZD", "AUD.USD", "EUR.USD", "GBP.USD", "NZD.USD" };
 
@@ -87,20 +87,22 @@ namespace Multi
             {
                 List<Stock> stocks;
                 List<Stocks5min> targetstocks;
-                int year = 2022;
-                int month = 9;
+                List<Consolidations> consolidations;
+                int year = 2023;
+                int month = 10;
                 // ###############################################################################################################
                 List<BuyPattern> patterns;
 
                 // for db data
                 stocks = Stock.GetStockData(@"Server=MSI\SQLEXPRESS; Database=market_data; Integrated Security=True;", Shares[i], year, month);
+                consolidations = Consolidations.GetConsolidations(stocks);
                 // stocks.Reverse();
                 targetstocks = Stocks5min.GetStockData(@"Server=MSI\SQLEXPRESS; Database=market_data; Integrated Security=True;", Shares[i], year, month);
                 // targetstocks.Reverse();
                 // // for excel data
                 // stocks = Stock.GetStockData(@"C:\stocks\" + Shares[i] + ".csv", Shares[i]);
 
-                patterns = BuyPattern.ThePattern(stocks, targetstocks, year);
+                patterns = BuyPattern.ThePattern(stocks, targetstocks, consolidations, year);
                 Console.WriteLine("-------" + Shares[i] + "-------");
                 double share_success = 0; double share_fail = 0;
                 foreach (BuyPattern p in patterns)
@@ -114,6 +116,8 @@ namespace Multi
                     target_period = target_period + p.Period;
                     Console.WriteLine(
                         " " + p.Status + " " + 
+                        p.StartCon.ToString("MM/dd/yyyy HH:mm") + " " +
+                        p.EndCon.ToString("MM/dd/yyyy HH:mm") + " " +
                         p.P1.ToString("MM/dd/yyyy HH:mm") + " " +
                         p.P2.ToString("MM/dd/yyyy HH:mm") + " " +
                         p.XX.ToString("MM/dd/yyyy HH:mm") + " " + "( " +
