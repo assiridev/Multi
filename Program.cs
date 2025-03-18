@@ -10,7 +10,7 @@ namespace Multi
         static void Main(string[] args)
         {
             #region  IB forex data
-            string[] Shares = { //"EUR.USD" };
+            string[] Shares = { //"CAD.CHF" };
             "EUR.AUD", "AUD.CAD", "EUR.CAD", "GBP.CAD", "NZD.CAD", "USD.CAD", "AUD.CHF", "CAD.CHF", "EUR.CHF",
                 "GBP.CHF", "NZD.CHF", "USD.CHF", "EUR.GBP", "AUD.NZD", "AUD.USD", "EUR.USD", "GBP.USD", "NZD.USD" };
 

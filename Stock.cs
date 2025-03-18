@@ -90,95 +90,95 @@ namespace Multi
                 // stockList.Reverse();
             }
             #region accu by LowestHigh & HighestLow
-            foreach (Stock o1 in stockList) // first loooooooop
-            {
-                double lowestHigh = 10000; double highestLow = 0; double o2Total = 0;
-                double accuScore = 0; double n = 1; // 1 = new accu
-                int o1_index = stockList.IndexOf(o1);
-                foreach (Stock o2 in stockList) // second loooooooop
-                {
-                    int o2_index = stockList.IndexOf(o2);
-                    if (o2.Date >= o1.Date)
-                    {
-                        o2Total = o2Total + (o2.High - o2.Low);
-                        if (o2.High <= lowestHigh)
-                            lowestHigh = o2.High;
-                        if (o2.Low >= highestLow)
-                            highestLow = o2.Low;
-                        if (o2_index - o1_index > 2)// && lowestHigh > highestLow) // more than 2 candles
-                        // if (1 == 1)
-                        {
-                            if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total > 0.70 && n == 1)
-                            {
-                                accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
-                                n = 0;
-                            }
-                            if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
-                            {
-                                accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
-                            }
-                            else if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
-                            {
-                                o1.Accupoint_1 = 1;
-                                stockList[o2_index - 1].Accupoint_2 = 1;
-                                // Console.WriteLine(o2.Date);
-                                // Console.WriteLine(o1.Date);
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
+            // foreach (Stock o1 in stockList) // first loooooooop
+            // {
+            //     double lowestHigh = 10000; double highestLow = 0; double o2Total = 0;
+            //     double accuScore = 0; double n = 1; // 1 = new accu
+            //     int o1_index = stockList.IndexOf(o1);
+            //     foreach (Stock o2 in stockList) // second loooooooop
+            //     {
+            //         int o2_index = stockList.IndexOf(o2);
+            //         if (o2.Date >= o1.Date)
+            //         {
+            //             o2Total = o2Total + (o2.High - o2.Low);
+            //             if (o2.High <= lowestHigh)
+            //                 lowestHigh = o2.High;
+            //             if (o2.Low >= highestLow)
+            //                 highestLow = o2.Low;
+            //             if (o2_index - o1_index > 2)// && lowestHigh > highestLow) // more than 2 candles
+            //             // if (1 == 1)
+            //             {
+            //                 if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total > 0.70 && n == 1)
+            //                 {
+            //                     accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
+            //                     n = 0;
+            //                 }
+            //                 if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
+            //                 {
+            //                     accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
+            //                 }
+            //                 else if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
+            //                 {
+            //                     o1.Accupoint_1 = 1;
+            //                     stockList[o2_index - 1].Accupoint_2 = 1;
+            //                     // Console.WriteLine(o2.Date);
+            //                     // Console.WriteLine(o1.Date);
+            //                     continue;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             #endregion
             #region accu by highest(Open,Close) & Lowest(Open,Close)
-            foreach (Stock o1 in stockList) // first loooooooop
-            {
-                double highest = 0; double lowest = 10000; double o2Total = 0;
-                double accuScore = 0; double n = 1; // 1 = new accu
-                int o1_index = stockList.IndexOf(o1);
-                foreach (Stock o2 in stockList) // second loooooooop
-                {
-                    int o2_index = stockList.IndexOf(o2);
-                    if (o2.Date >= o1.Date)
-                    {
-                        o2Total = o2Total + (o2.High - o2.Low);
-                        #region Highest(Open, Close) & Lowest(Open, Close)
-                        // need to implement summing the traded areas
-                        if (Math.Max(o2.Open, o2.Close) >= highest)
-                            highest = Math.Max(o2.Open, o2.Close);
-                        if (Math.Min(o2.Open, o2.Close) <= lowest)
-                            lowest = Math.Min(o2.Open, o2.Close);
-                        #endregion
-                        if (o2_index - o1_index > 1)// && highest > lowest) // more than 2 candles
-                        // if (1 == 1)
-                        {
-                            if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total > 0.90 && n == 1)
-                            {
-                                accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
-                                n = 0;
-                                o1.Accupoint_1 = 2;
-                                stockList[o2_index - 1].Accupoint_2 = 2;
-                                consolidations.Add(new Consolidations(o1.Name, o1.Date, stockList[o2_index - 1].Date));
-                            }
-                            if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
-                            {
-                                accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
-                                o1.Accupoint_1 = 2;
-                                stockList[o2_index - 1].Accupoint_2 = 2;
-                                consolidations.Add(new Consolidations(o1.Name, o1.Date, stockList[o2_index - 1].Date));
-                            }
-                            else if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
-                            {
-                                // o1.Accupoint_1 = 2;
-                                // stockList[o2_index - 1].Accupoint_2 = 2;
-                                // Console.WriteLine(o2.Date);
-                                // Console.WriteLine(o1.Date);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            // foreach (Stock o1 in stockList) // first loooooooop
+            // {
+            //     double highest = 0; double lowest = 10000; double o2Total = 0;
+            //     double accuScore = 0; double n = 1; // 1 = new accu
+            //     int o1_index = stockList.IndexOf(o1);
+            //     foreach (Stock o2 in stockList) // second loooooooop
+            //     {
+            //         int o2_index = stockList.IndexOf(o2);
+            //         if (o2.Date >= o1.Date)
+            //         {
+            //             o2Total = o2Total + (o2.High - o2.Low);
+            //             #region Highest(Open, Close) & Lowest(Open, Close)
+            //             // need to implement summing the traded areas
+            //             if (Math.Max(o2.Open, o2.Close) >= highest)
+            //                 highest = Math.Max(o2.Open, o2.Close);
+            //             if (Math.Min(o2.Open, o2.Close) <= lowest)
+            //                 lowest = Math.Min(o2.Open, o2.Close);
+            //             #endregion
+            //             if (o2_index - o1_index > 1)// && highest > lowest) // more than 2 candles
+            //             // if (1 == 1)
+            //             {
+            //                 if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total > 0.90 && n == 1)
+            //                 {
+            //                     accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
+            //                     n = 0;
+            //                     o1.Accupoint_1 = 2;
+            //                     stockList[o2_index - 1].Accupoint_2 = 2;
+            //                     consolidations.Add(new Consolidations(o1.Name, o1.Date, stockList[o2_index - 1].Date));
+            //                 }
+            //                 if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
+            //                 {
+            //                     accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
+            //                     o1.Accupoint_1 = 2;
+            //                     stockList[o2_index - 1].Accupoint_2 = 2;
+            //                     consolidations.Add(new Consolidations(o1.Name, o1.Date, stockList[o2_index - 1].Date));
+            //                 }
+            //                 else if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
+            //                 {
+            //                     // o1.Accupoint_1 = 2;
+            //                     // stockList[o2_index - 1].Accupoint_2 = 2;
+            //                     // Console.WriteLine(o2.Date);
+            //                     // Console.WriteLine(o1.Date);
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             #endregion
             return stockList;
         }

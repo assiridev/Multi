@@ -11,10 +11,11 @@ namespace Multi
         public string Name { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
+        public double LowestPnt { get; set; }
         #endregion
-        public Consolidations(string name, DateTime start, DateTime end)
+        public Consolidations(string name, DateTime start, DateTime end, double lowestPnt)
         {
-            Name = name; Start = start; End = end;
+            Name = name; Start = start; End = end; LowestPnt = lowestPnt;
         }
 
         public static List<Consolidations> GetConsolidations(List<Stock> stockList)
@@ -24,12 +25,14 @@ namespace Multi
             foreach (Stock o1 in stockList) // first loooooooop
             {
                 double qud = 0;
-                double highestP = o1.High; double lowestP = o1.Low;
+                double highestP = 0; double lowestP = 0;
                 double lowestHigh = 10000; double highestLow = 0; double o2Total = 0;
                 double accuScore = 0; double n = 1; // 1 = new accu
                 int o1_index = stockList.IndexOf(o1);
                 foreach (Stock o2 in stockList) // second loooooooop
                 {
+                    highestP = HighestPoint(o1, o2, stockList);
+                    lowestP = LowestPoint(o1, o2, stockList);
                     if (o2.High > highestP)
                         highestP = o2.High;
                     if (o2.Low < lowestP)
@@ -53,8 +56,9 @@ namespace Multi
                             //     // if (o2.Close <= lowestP + (highestP - lowestP) * 0.25 && o2.Low > lowestP)
                             //     // if (o2.Low > lowestP)
                             //     // if (regLine(o1, o2, stockList) == 1)// && o2.Close <= lowestP + (highestP - lowestP) * 0.75)
-                                if (qud == 1)
-                                    consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date));
+                                // if (qud == 1 && o2.Low > lowestP && o2.Close > stockList[o2_index - 1].Low)
+                                if (qud == 1 && o2.Low == lowestP && o2.Close > LowestPoint(o1, stockList[o2_index - 1], stockList))
+                                    consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, lowestP));
                                 // else if (qud == -1)
                                 //     break;
                                 else
@@ -167,6 +171,7 @@ namespace Multi
         }
         public static double Quad(Stock p0, Stock x, int p0_index, int x_index, double concav, List<Stock> stocks)
         {
+            #region Vars
             double all = 0; double touching = 0;;
             double above = 0; double below = 0;
             double above1 = 0; double below1 = 0;
@@ -177,6 +182,7 @@ namespace Multi
             int quart_80 = (((x_index - p0_index) / 5) * 4) + p0_index;
             List<double> xDataList = new List<double>();
             List<double> yDataList = new List<double>();
+            #endregion
             
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
@@ -228,6 +234,7 @@ namespace Multi
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
 
+            #region Kitchen
             // Determine the best polynomial degree using BIC
             // Adjust the concavity (e.g., double the curvature)
             int maxDegree = 3; // Limit to a reasonable degree
@@ -253,7 +260,7 @@ namespace Multi
             // }
             for (int degree = 2; degree <= maxDegree; degree++)
             {
-                double bic = PolynomialRegression.CalculateBIC(xData, yData, degree, out PolynomialRegression model, linearWeight: 1.0);
+                double bic = PolynomialRegression.CalculateBIC(xData, yData, degree, out PolynomialRegression model, linearWeight: 1.0); // : 1.0
                 // Console.WriteLine($"Degree {degree}: BIC = {bic:0.###}");
 
                 if (bic < bestBIC)
@@ -316,7 +323,8 @@ namespace Multi
                             break;
                     }
                     belowPer = below / (below + above);
-                    // Console.WriteLine(bestModel.GetCurvature(Convert.ToDouble(x.Speed)));
+                    #endregion
+
                     if (
                     // above < below * 1.382 && // goooooood
                     // above1 > below1 && //  >
@@ -326,18 +334,12 @@ namespace Multi
                     touching / all == 1
                     && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) // mid || quart_80
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_80].Speed))
-                    && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // lowestCurv_index > stocks.IndexOf(stocks[(int)quart_80])
                     )
                     {
                         return 1;
                     }
-                    // else if (
-                    // touching / all < 1
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // )
-                    //     return -1;
                     else
                         return 0;
                 }
@@ -349,6 +351,32 @@ namespace Multi
                 // Console.WriteLine("The best model is not quadratic.");
                 return 0;
             }
+        }
+        private static double HighestPoint(Stock from, Stock to, List<Stock> stocks)
+        {
+            double highest = 0;
+            foreach (Stock c in stocks)
+            {
+                if (c.Date >= from.Date && c.Date <= to.Date)
+                {
+                    if (c.High > highest)
+                        highest = c.High;
+                }
+            }
+            return highest;
+        }
+        private static double LowestPoint(Stock from, Stock to, List<Stock> stocks)
+        {
+            double lowest = 10000;
+            foreach (Stock c in stocks)
+            {
+                if (c.Date >= from.Date && c.Date <= to.Date)
+                {
+                    if (c.Low < lowest)
+                        lowest = c.Low;
+                }
+            }
+            return lowest;
         }
         public int CompareTo(Consolidations that)
         {

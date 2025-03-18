@@ -121,7 +121,7 @@ namespace Multi
                                             continue;
                                         // if ((x.Date - BeforeXTopDateTime).Days < 7) // needed for quad only to prevent errors
                                         //     continue;
-                                        if (conditions(p1, p2, x, p1_index, p2_index, x_index, crossing, tradeopen, stocks, stocks5min, year))
+                                        if (conditions(p1, p2, x, p1_index, p2_index, x_index, cc.LowestPnt, crossing, tradeopen, stocks, stocks5min, year))
                                         {
                                             // if ((x.Date - BeforeXTopDateTime).Days < 5) // needed for quad only to prevent errors
                                             //     continue;
@@ -180,7 +180,7 @@ namespace Multi
             return TempList2;
             #endregion
         }
-        private static bool conditions(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double crossing, double tradeopen, List<Stock> stocks, List<Stocks5min> stocks5min, int year)
+        private static bool conditions(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double lowestPnt, double crossing, double tradeopen, List<Stock> stocks, List<Stocks5min> stocks5min, int year)
         {
             if (
             // crossing > LowestPoint(p1, x, x_index, x_index, stocks) + (HighestPoint(p1, x, x_index, x_index, stocks) - LowestPoint(p1, x, x_index, x_index, stocks)) * 0.25 &&
@@ -219,6 +219,7 @@ namespace Multi
             // quadMacdThis5min(p1.Date, x.Date, 1, stocks5min) > 0 &&
             // findSupports(stocks[(((x_index - p1_index) / 5) * 3) + p1_index], x, p2_index, x_index, crossing, stocks) == true &&
             // findSupportss(stocks[x_index - 3], stocks[x_index + 3], p2_index, x_index, crossing, stocks5min) == true &&
+            // x.Low > lowestPnt &&
             x_index - p1_index < 200
             )
                 return true;
