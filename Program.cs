@@ -10,7 +10,7 @@ namespace Multi
         static void Main(string[] args)
         {
             #region  IB forex data
-            string[] Shares = { //"CAD.CHF" };
+            string[] Shares = { //"AUD.CAD" };
             "EUR.AUD", "AUD.CAD", "EUR.CAD", "GBP.CAD", "NZD.CAD", "USD.CAD", "AUD.CHF", "CAD.CHF", "EUR.CHF",
                 "GBP.CHF", "NZD.CHF", "USD.CHF", "EUR.GBP", "AUD.NZD", "AUD.USD", "EUR.USD", "GBP.USD", "NZD.USD" };
 
@@ -87,9 +87,10 @@ namespace Multi
             {
                 List<Stock> stocks;
                 List<Stocks5min> targetstocks;
+                List<Stocks5minTar> targetstocksTar;
                 List<Consolidations> consolidations;
-                int year = 2023;
-                int month = 10;
+                int year = 2022;
+                int month = 4;
                 // ###############################################################################################################
                 List<BuyPattern> patterns;
 
@@ -98,11 +99,12 @@ namespace Multi
                 consolidations = Consolidations.GetConsolidations(stocks);
                 // stocks.Reverse();
                 targetstocks = Stocks5min.GetStockData(@"Server=MSI\SQLEXPRESS; Database=market_data; Integrated Security=True;", Shares[i], year, month);
+                targetstocksTar = Stocks5minTar.GetStockData(@"Server=MSI\SQLEXPRESS; Database=market_data; Integrated Security=True;", Shares[i], year, month);
                 // targetstocks.Reverse();
                 // // for excel data
                 // stocks = Stock.GetStockData(@"C:\stocks\" + Shares[i] + ".csv", Shares[i]);
 
-                patterns = BuyPattern.ThePattern(stocks, targetstocks, consolidations, year);
+                patterns = BuyPattern.ThePattern(stocks, targetstocks, consolidations, targetstocksTar, year, month);
                 Console.WriteLine("-------" + Shares[i] + "-------");
                 double share_success = 0; double share_fail = 0;
                 foreach (BuyPattern p in patterns)

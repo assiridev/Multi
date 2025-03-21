@@ -29,13 +29,14 @@ namespace Multi
         public double Cancel { get; set; }
         public static DateTime BeforeXTopDateTime { get; set; }
         public static double HighestBefX { get; set; }
+        public static int HighestBeFXindex { get; set; }
         #endregion
 
         public BuyPattern(DateTime p1, DateTime p2, DateTime xx, DateTime startCon, DateTime endCon, double target, double stoploss, int status, int duplicate, double profit, double loss, double period, double cross, double tradeopen, double cancel)
         {
             P1 = p1; P2 = p2; XX = xx; StartCon = startCon; EndCon = endCon; Target = target; Stoploss = stoploss; Status = status; Duplicate = duplicate; Profit = profit; Loss = loss; Period = period; Cross = cross; Tradeopen = tradeopen; Cancel = cancel;
         }
-        public static List<BuyPattern> ThePattern(List<Stock> stocks, List<Stocks5min> stocks5min, List<Consolidations> consolidations, int year)
+        public static List<BuyPattern> ThePattern(List<Stock> stocks, List<Stocks5min> stocks5min, List<Consolidations> consolidations, List<Stocks5minTar> tar, int year, int month)
         {
             Dictionary<string, double> values = new Dictionary<string, double>();
             double cancel= 0; 
@@ -48,10 +49,8 @@ namespace Multi
             {
                 foreach (Stocks5min p1 in stocks5min)
                 {
-                // if (p1.Date < cc.Start)
                 if (DateTime.Parse(p1.Date.ToShortDateString()) < cc.Start)
                     continue;
-                // if (p1.Date > cc.End)
                 if (DateTime.Parse(p1.Date.ToShortDateString()) > cc.End)
                     break;
                 if (p1.Type == "b") { p1_index = stocks5min.IndexOf(p1); } else { continue; }
@@ -61,7 +60,6 @@ namespace Multi
                     // Find p2
                     foreach (Stocks5min p2 in stocks5min)
                     {
-                        // if (p2.Date > cc.End)
                         if (DateTime.Parse(p2.Date.ToShortDateString()) > cc.End)
                             break;
                         if (p2.Date > p1.Date)
@@ -77,10 +75,9 @@ namespace Multi
                             {
                                 if (x.Date > p2.Date)
                                 {
-                                    // if (x.Date > cc.End)
                                     if (DateTime.Parse(x.Date.ToShortDateString()) <= cc.End)
                                         continue;
-                                    if (DateTime.Parse(x.Date.ToShortDateString()) > cc.End.AddDays(1))
+                                    if (DateTime.Parse(x.Date.ToShortDateString()) > cc.End.AddDays(2))
                                         break;
                                     if (x.Low > p2.Low) continue; // Howwa daa (<) up Trend ... (>) down Trend
                                     x_index = stocks5min.IndexOf(x);
@@ -108,7 +105,6 @@ namespace Multi
                                         // // buy
                                         // if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
                                         //     continue;
-
                                         if (HighestPoint(stocks5min[(int)mid], x, x_index, x_index, stocks5min) > HighestPoint(p1, stocks5min[(int)mid], x_index, x_index, stocks5min))
                                             continue;
                                         if(findOutliersImp(p1, p2, x, p1_index, p2_index, x_index, crossing, stocks5min) == false)
@@ -119,16 +115,16 @@ namespace Multi
                                             continue;
                                         if(findOutliersX(p1, p2, x, p1_index, p2_index, x_index, crossing, stocks5min) == false)
                                             continue;
-                                        // if ((x.Date - BeforeXTopDateTime).Days < 7) // needed for quad only to prevent errors
+                                        // if (x_index - HighestBeFXindex < 3)
                                         //     continue;
                                         if (conditions(p1, p2, x, p1_index, p2_index, x_index, cc.LowestPnt, crossing, tradeopen, stocks, stocks5min, year))
                                         {
                                             // if ((x.Date - BeforeXTopDateTime).Days < 5) // needed for quad only to prevent errors
                                             //     continue;
-                                            cancel = tradeopen + (HighestPoint(stocks5min[(int)quart_80], x, x_index, x_index, stocks5min) - tradeopen) * 0.25;
+                                            cancel = tradeopen + (HighestPoint(p1, x, x_index, x_index, stocks5min) - tradeopen) * 0.25;
                                             // cancel = tradeopen + (HighestBefX - tradeopen) * 5;
                                             int target_index = 0;
-                                            values = setValues(p1, p2, x, p1_index, p2_index, x_index, crossing, tradeopen, stocks5min);
+                                            values = setValues(cc.Start, cc.End, stocks, p1, p2, x, p1_index, p2_index, x_index, crossing, tradeopen, cc.LowestPnt, stocks5min);
                                             patterns.Add(new BuyPattern(p1.Date, p2.Date, x.Date, cc.Start, cc.End, values["target"], values["stoploss"], 1, 0, values["profit_per"], values["loss_per"], 0, x.Close, x.Close, cancel));
                                             continue;
                                         }
@@ -142,7 +138,7 @@ namespace Multi
             // to find duplicates in my list of patterns
             List<BuyPattern> temp = removeDuplicates(patterns);
             // return temp;
-            List<BuyPattern> afterTargets = findTargets(temp, stocks5min);
+            List<BuyPattern> afterTargets = findTargets(temp, tar);
             // List<BuyPattern> afterTargets = findMultipleTargets(stocks, temp, stocks5min);
             return afterTargets;
         }
@@ -183,7 +179,9 @@ namespace Multi
         private static bool conditions(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double lowestPnt, double crossing, double tradeopen, List<Stock> stocks, List<Stocks5min> stocks5min, int year)
         {
             if (
-            // crossing > LowestPoint(p1, x, x_index, x_index, stocks) + (HighestPoint(p1, x, x_index, x_index, stocks) - LowestPoint(p1, x, x_index, x_index, stocks)) * 0.25 &&
+            x.Close > lowestPnt &&
+            // Quad(p1, x, p1_index, x_index, crossing, 1, stocks5min) > 0 &&
+            // x.Close > LowestPoint(p1, x, x_index, x_index, stocks5min) + (HighestPoint(p1, x, x_index, x_index, stocks5min) - LowestPoint(p1, x, x_index, x_index, stocks5min)) * 0.25 &&
             // (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) / (HighestPoint(p2, x, x_index, x_index, stocks)  - p2.Low) > 0.618 &&
             // (HighestPoint(p2, x, x_index, x_index, stocks) -  p2.Low) / (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) > 0.382 &&
             // x_index - p2_index < (p2_index - p1_index) * 1 &&
@@ -202,7 +200,7 @@ namespace Multi
             // x_index - HighestPoint_index(stocks[((x_index - p1_index) / 2) + p1_index], x, p1_index, x_index, stocks) > 3 &&
             // x_index - HighestPoint_index(stocks[((x_index - p1_index) / 2) + p1_index], x, p1_index, x_index, stocks) > 3 &&
             
-            // Quad(p1, x, p1_index, x_index, crossing, -1, stocks5min) > 0 &&
+            
             // findSupportCntr(p1, p2, x, p1_index, p2_index, x_index, stocks5min) == true && // also good but ....
 
             // quadMacdThis(p1, x, p1_index, x_index, crossing, 0, stocks) > 0 &&
@@ -219,6 +217,7 @@ namespace Multi
             // quadMacdThis5min(p1.Date, x.Date, 1, stocks5min) > 0 &&
             // findSupports(stocks[(((x_index - p1_index) / 5) * 3) + p1_index], x, p2_index, x_index, crossing, stocks) == true &&
             // findSupportss(stocks[x_index - 3], stocks[x_index + 3], p2_index, x_index, crossing, stocks5min) == true &&
+            // GetConsolidationsStock5min(p2, x, stocks5min) == 1 &&
             // x.Low > lowestPnt &&
             x_index - p1_index < 200
             )
@@ -296,6 +295,7 @@ namespace Multi
                     {
                         highestBeforeX = before.High;
                         HighestBefX = before.High;
+                        HighestBeFXindex = stocks5min.IndexOf(before);
                         HighestDateTime = before.Date; // date of highest
                         BeforeXTopDateTime = HighestDateTime;
                     }
@@ -493,6 +493,98 @@ namespace Multi
                 return true;
             else
                 return false;
+        }
+        public static int GetConsolidationsStock5min(Stocks5min start, Stocks5min end, List<Stocks5min> stockList)
+        {
+            int consolidations = 0;
+            #region accu by LowestHigh & HighestLow
+            foreach (Stocks5min o1 in stockList) // first loooooooop
+            {
+                if (o1.Date < start.Date)
+                        continue;
+                if (o1.Date > end.Date)
+                    break;
+                // Console.WriteLine(stockList.Count);
+                double qud = 0;
+                double highestP = 0; double lowestP = 0;
+                double lowestHigh = 10000; double highestLow = 0; double o2Total = 0;
+                double accuScore = 0; double n = 1; // 1 = new accu
+                int o1_index = stockList.IndexOf(o1);
+                foreach (Stocks5min o2 in stockList) // second loooooooop
+                {
+                    if (o2.Date < start.Date)
+                        continue;
+                    if (o2.Date > end.Date)
+                        break;
+                    int o2_index = stockList.IndexOf(o2);
+                    highestP = HighestPoint(o1, o2, o1_index, o2_index, stockList);
+                    lowestP = LowestPoint(o1, o2, o1_index, o2_index, stockList);
+                    if (o2.High > highestP)
+                        highestP = o2.High;
+                    if (o2.Low < lowestP)
+                        lowestP = o2.Low;
+                
+                    if (o2.Date >= o1.Date)
+                    {
+                        o2Total = o2Total + (o2.High - o2.Low);
+                        if (o2.High <= lowestHigh)
+                            lowestHigh = o2.High;
+                        if (o2.Low >= highestLow)
+                            highestLow = o2.Low;
+                        if (o2_index - o1_index >= 2)// && o2_index - o1_index <= 6)// && lowestHigh > highestLow) // more than 2 candles
+                        {
+                            if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total > 0.50 && n == 1 && o2.Date == end.Date)
+                            {
+                                accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
+                                n = 0;
+                                consolidations = 1;
+                                return consolidations;
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+            #region accu by highest(Open,Close) & Lowest(Open,Close)
+            // foreach (Stock o1 in stockList) // first loooooooop
+            // {
+            //     double highest = 0; double lowest = 10000; double o2Total = 0;
+            //     double accuScore = 0; double n = 1; // 1 = new accu
+            //     int o1_index = stockList.IndexOf(o1);
+            //     foreach (Stock o2 in stockList) // second loooooooop
+            //     {
+            //         int o2_index = stockList.IndexOf(o2);
+            //         if (o2.Date >= o1.Date)
+            //         {
+            //             o2Total = o2Total + (o2.High - o2.Low);
+            //             #region Highest(Open, Close) & Lowest(Open, Close)
+            //             // need to implement summing the traded areas
+            //             if (Math.Max(o2.Open, o2.Close) >= highest)
+            //                 highest = Math.Max(o2.Open, o2.Close);
+            //             if (Math.Min(o2.Open, o2.Close) <= lowest)
+            //                 lowest = Math.Min(o2.Open, o2.Close);
+            //             #endregion
+            //             if (o2_index - o1_index > 2)// && highest > lowest) // more than 2 candles
+            //             {
+            //                 if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total > 0.90 && n == 1) // was 90
+            //                 {
+            //                     accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
+            //                     n = 0;
+            //                     consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date)); // stockList[o2_index - 1].Date
+            //                 }
+            //                 if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
+            //                 {
+            //                     accuScore = (highest - lowest) * (o2_index - o1_index + 1) / o2Total;
+            //                     consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date)); // stockList[o2_index - 1].Date
+            //                 }
+            //                 else if ((highest - lowest) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
+            //                     break;
+            //             }
+            //         }
+            //     }
+            // }
+            #endregion
+            return consolidations;
         }
         private static bool findSupportCntr(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, List<Stocks5min> stocks)
         {
@@ -739,7 +831,7 @@ namespace Multi
             else
                 return false;
         }
-        private static List<BuyPattern> findMultipleTargets(List<Stock> stocks, List<BuyPattern> patterns, List<Stocks5min> targetstocks)
+        private static List<BuyPattern> findMultipleTargets(List<Stock> stocks, List<BuyPattern> patterns, List<Stocks5minTar> targetstocks)
         {
             List<BuyPattern> patternsWithTargets = new List<BuyPattern>();
             // Find target
@@ -763,7 +855,7 @@ namespace Multi
                     {
                         if (cntr > 0)
                         {
-                            foreach (Stocks5min target in targetstocks)
+                            foreach (Stocks5minTar target in targetstocks)
                             {
                                 // if (Frame4HoursCntr > 0)
                                 // {
@@ -968,7 +1060,7 @@ namespace Multi
             }
             return patternsWithTargets;
         }
-        private static List<BuyPattern> findTargets(List<BuyPattern> patterns, List<Stocks5min> targetstocks)
+        private static List<BuyPattern> findTargets(List<BuyPattern> patterns, List<Stocks5minTar> targetstocks)
         {
             List<BuyPattern> patternsWithTargets = new List<BuyPattern>();
             // Find target
@@ -984,7 +1076,7 @@ namespace Multi
                 int checkLossFirst = 0;
                 int firstIndex = 0;
                 string xDate = "";
-                foreach (Stocks5min target in targetstocks)
+                foreach (Stocks5minTar target in targetstocks)
                 {
                     if (target.Date >= pattern.XX) // For the same timeframe
                     // if (DateTime.Parse(target.Date.ToShortDateString()) >= DateTime.Parse(pattern.X.ToShortDateString())) // For different frames
@@ -1181,6 +1273,7 @@ namespace Multi
         
         public static double Quad(Stocks5min p0, Stocks5min x, int p0_index, int x_index, double Crossing, double concav, List<Stocks5min> stocks)
         {
+            #region Vars
             double aboveMdl = 0; double belowMdl = 0; 
             double MdlLine = LowestPoint(p0, x, p0_index, x_index, stocks) + (HighestPoint(p0, x, p0_index, x_index, stocks) - LowestPoint(p0, x, p0_index, x_index, stocks)) * 0.50;
             double top25 = LowestPoint(p0, x, p0_index, x_index, stocks) + (HighestPoint(p0, x, p0_index, x_index, stocks) - LowestPoint(p0, x, p0_index, x_index, stocks)) * 0.75;
@@ -1197,7 +1290,8 @@ namespace Multi
             int quart_20 = (((x_index - p0_index) / 5) * 1) + p0_index;
             int quart_80 = (((x_index - p0_index) / 5) * 4) + p0_index;
             int highestPntIndex = HighestPoint_index(p0, x, p0_index, x_index, stocks);
-            
+            #endregion
+
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
             // List<Tuple<DateTime, double>> prices = new List<Tuple<DateTime, double>>();
@@ -1234,7 +1328,9 @@ namespace Multi
             foreach (Stocks5min q in stocks)
             {
                 int index = stocks.IndexOf(q);
-                if (q.Date < p0.Date)
+                // if (q.Date < p0.Date)
+                //     continue;
+                if (index < HighestBeFXindex)
                     continue;
                 // if (q.Date < BeforeXTopDateTime)
                 //     continue;
@@ -1248,7 +1344,9 @@ namespace Multi
                 yDataList.Add(q.Close);
             }
             #endregion
-             // Convert lists to arrays
+            
+            #region Kitchen
+            // Convert lists to arrays
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
 
@@ -1308,7 +1406,9 @@ namespace Multi
                     foreach (Stocks5min q in stocks)
                     {
                         int index = stocks.IndexOf(q);
-                        if (q.Date < p0.Date)
+                        // if (q.Date < p0.Date)
+                        //     continue;
+                        if (index < HighestBeFXindex)
                             continue;
                         // if (index < highestPntIndex)
                         //     continue;
@@ -1346,7 +1446,7 @@ namespace Multi
                     foreach (Stocks5min q in stocks)
                     {
                         int index = stocks.IndexOf(q);
-                        if (index > p0_index && index <= mid)
+                        if (index > HighestBeFXindex && index <= mid)
                         {
                             all1 = all1 + 1;
                             double yValue1 = bestModel.GetCurveValue(Convert.ToDouble(q.Speed));
@@ -1364,7 +1464,9 @@ namespace Multi
                     foreach (Stocks5min q in stocks)
                     {
                         int index = stocks.IndexOf(q);
-                        if (q.Date < p0.Date)
+                        // if (q.Date < p0.Date)
+                        //     continue;
+                        if (index < HighestBeFXindex)
                             continue;
                         // if (index < highestPntIndex)
                         //     continue;
@@ -1380,66 +1482,18 @@ namespace Multi
                         // }
                     }
                     belowPer = below / (below + upove);
-                    // Console.WriteLine(bestModel.GetCurvature(Convert.ToDouble(x.Speed)));
+                    #endregion
+
                     if (
-                    // aboveMdl < belowMdl * 1
-                    // touching / all < touching1 / all * 0.50
-                    // && (touching + touching1) / all > 0.50
-                    // touching / all >= 0.50
-                    // &&
-                    // bestModel.GetConcavityDegree() > 2.2943677654953455E-16 // 0.00000000000000012943677654953455
-                    // touching1 > touching2
-                    // && touching1 / all1 > 0.50
-                    // && bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) > x.Close
                     // upove > below * 1 &&
-                    // below < upove * 0.50 &&
-                    // below > upove * 0.30
                     // 1 == 1
-                    // bestModel.GetCurvature(Convert.ToDouble(x.Speed)) < bestModel.GetCurvature(Convert.ToDouble(stocks[mid].Speed))
-                    // && bestModel.GetCurvature(Convert.ToDouble(x_index - 5)) < bestModel.GetCurvature(Convert.ToDouble(stocks[x_index - 10].Speed))
-                    // && bestModel.GetCurvature(Convert.ToDouble(x.Speed)) > bestModel.GetCurvature(Convert.ToDouble(stocks[x_index - 2].Speed))
-                    // upove < below * 1
-                    
-                    // && belowPer > 0.20
-                    // && bestModel.GetCurvature(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurvature(Convert.ToDouble(x.Speed))
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > 0
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) - bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) > 0
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) >
-                    // bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) - bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // upove > below * 1 &&
-                    1 == 1
-                    // touching / all <= 0.50 &&
-                    // accuCntr / accuCn > 0.70
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
-                    // // // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_80].Speed))
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // // && x.Low < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // && x.High < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // && bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) < down25
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > top25
-                    // && x.Low < stocks[x_index - 1].Low
-                    
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_20].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_80].Speed))
-                    // && bestModel.GetConcavityDegree() > 0.00000000000001
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) >
-                    // (bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) - bestModel.GetCurveValue(Convert.ToDouble(x.Speed))) * 2
-
-                    // lowestCurv_index > stocks.IndexOf(stocks[(int)quart_80])
-
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) <
-                    // LowestPoint(p0, x, x_index, x_index, stocks) + (HighestPoint(p0, x, x_index, x_index, stocks) - LowestPoint(p0, x, x_index, x_index, stocks)) * 0.25
-                    // && 
-                    // bestModel.GetCurvature(Convert.ToDouble(x.Speed)) < 1.0000000000000000E-14
-                    // bestModel.GetConcavityDegree() > 0.0001
-                    // if (below > upove * 2)
-                    // if (belowPer < 0.30 && belowPer < 0.80)
-                    // && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) * 1
+                    // touching / all >= 0.80 &&
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
+                    && (bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)))
+                    // && lowestCurv_index > stocks.IndexOf(stocks[(int)mid])
                     )
                     {
-                        // Console.WriteLine(bestModel.GetConcavityDegree());
-                        // Console.WriteLine(p0.Date + " " + x.Date);
-                        return 1;//bestModel.GetConcavityDegree();
+                        return 1;
                     }
                     else
                         return 0;
@@ -1459,7 +1513,7 @@ namespace Multi
             double highest = 0;
             foreach (Stocks5min c in stocks)
             {
-                if (c.Date > from.Date && c.Date <= to.Date)
+                if (c.Date >= from.Date && c.Date <= to.Date)
                 {
                     if (c.High > highest)
                         highest = c.High;
@@ -1472,7 +1526,33 @@ namespace Multi
             double lowest = 10000;
             foreach (Stocks5min c in stocks)
             {
-                if (c.Date > from.Date && c.Date <= to.Date)
+                if (c.Date >= from.Date && c.Date <= to.Date)
+                {
+                    if (c.Low < lowest)
+                        lowest = c.Low;
+                }
+            }
+            return lowest;
+        }
+        private static double HighestPoint(DateTime from, DateTime to, List<Stock> stocks)
+        {
+            double highest = 0;
+            foreach (Stock c in stocks)
+            {
+                if (c.Date >= from && c.Date <= to)
+                {
+                    if (c.High > highest)
+                        highest = c.High;
+                }
+            }
+            return highest;
+        }
+        private static double LowestPoint(DateTime from, DateTime to, List<Stock> stocks)
+        {
+            double lowest = 10000;
+            foreach (Stock c in stocks)
+            {
+                if (c.Date >= from && c.Date <= to)
                 {
                     if (c.Low < lowest)
                         lowest = c.Low;
@@ -1602,12 +1682,13 @@ namespace Multi
             }
             return index;
         }
+        
         #endregion
 
         private static double Crossing(Stocks5min p1, Stocks5min p2, Stocks5min xx, int p1_index, int p2_index, int x_index) =>
         (p1.Low - ((p1.Low - p2.Low) / (p2_index - p1_index) * (x_index - p1_index)));
 
-        private static Dictionary<string, double> setValues(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double crossing, double tradeopen, List<Stocks5min> stocks)
+        private static Dictionary<string, double> setValues(DateTime start, DateTime end, List<Stock> stocks, Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double crossing, double tradeopen, double lowestPnt, List<Stocks5min> stocks5min)
         {
             // crossing value inside thePattern method
             // market type inside thePattern method
@@ -1628,8 +1709,11 @@ namespace Multi
             // double stoploss = penetration - (HighestBefX - penetration) * 1;
             // double stoploss = x.Low - 0.0005;
             // double stoploss = penetration - (x.High - x.Low);
-            double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks) - penetration) * 0.50;
-            double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks) - penetration) * 0.50;
+            double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.25; // small frame
+            double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
+            // double stoploss = lowestPnt - 0.0010;
+            // double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.75; // Big frame
+            // double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
             // double stoploss = support - 0.0020;
             // double target   = penetration * 1.005;
             // double stoploss = LowestPoint(stocks[(int)mid], x, x_index, x_index, stocks) - 0.0005;

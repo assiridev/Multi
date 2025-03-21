@@ -37,7 +37,7 @@ namespace Multi
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1dayallSTK] WHERE year([_datetime]) = '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hourallSTK] WHERE year([_datetime]) = '" + year + "' and month([_datetime]) = '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // Oanda Tbl
-            using (SqlCommand command = new SqlCommand("SELECT TOP 100000000000000 * FROM [OandaTbl] WHERE year([_datetime]) = '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
+            using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [OandaTbl] WHERE year([_datetime]) = '" + year + "' and month([_datetime]) = '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             {
                 connection.Open();
                 using (SqlDataReader reader = command.ExecuteReader())
@@ -67,19 +67,12 @@ namespace Multi
                 s.Speed = (int)((DateTimeOffset)currentTime).ToUnixTimeSeconds();
                 int index = stockList.IndexOf(s);
                 #region High / Low // bottoms
-                s.Mid = s.Low + (s.High - s.Low) * 0.50; // s.Close
                 try
                 {
                     if (index != 0 && index != LastIndex - 1)
                     {
-                        if (s.Low <= stockList[index - 1].Low && s.Low <= stockList[index + 1].Low)
-                        {
-                            s.Type = "b";
-                        }
-                        else
-                        {
-                            s.Type = "n";
-                        }
+                        s.Type = "b";
+                        
                     }
                 }
                 catch (Exception e)
