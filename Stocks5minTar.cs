@@ -27,7 +27,7 @@ namespace Multi
             List<Stocks5minTar> stockList = new List<Stocks5minTar>(); // and month([_datetime]) >= '" + month + "' // year([_datetime]) >= '" + year + "' and // OandaTbl4Hours
             using (SqlConnection connection = new SqlConnection(conn)) // datain1dayallSTK // datain1hourallSTK // datain5minallSTK // datain1minallSTK // datain1hour1month // datain15min1month
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1day1year] WHERE LEFT([unixdatetime], 4) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
-            using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hour1month] WHERE year([_datetime]) >= '" + year + "' and month([_datetime]) >= '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
+            using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hour1month] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1dayallSTK] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hourallSTK] WHERE year([_datetime]) >= '" + year + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // // Oanda Tbl

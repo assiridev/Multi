@@ -10,9 +10,9 @@ namespace Multi
         static void Main(string[] args)
         {
             #region  IB forex data
-            string[] Shares = { //"AUD.CAD" };
+            string[] Shares = { //"GBP.CAD" };
             "EUR.AUD", "AUD.CAD", "EUR.CAD", "GBP.CAD", "NZD.CAD", "USD.CAD", "AUD.CHF", "CAD.CHF", "EUR.CHF",
-                "GBP.CHF", "NZD.CHF", "USD.CHF", "EUR.GBP", "AUD.NZD", "AUD.USD", "EUR.USD", "GBP.USD", "NZD.USD" };
+                "GBP.CHF", "NZD.CHF", "USD.CHF", "EUR.GBP", /*"AUD.NZD",*/ "AUD.USD", "EUR.USD", "GBP.USD", "NZD.USD" };
 
             // "EUR.AUD", "AUD.CAD", "EUR.CAD", "NZD.CAD", "USD.CAD", "AUD.CHF", "CAD.CHF", "EUR.CHF",
             //     "NZD.CHF", "USD.CHF", "AUD.NZD", "AUD.USD", "EUR.USD", "NZD.USD" };
@@ -90,7 +90,7 @@ namespace Multi
                 List<Stocks5minTar> targetstocksTar;
                 List<Consolidations> consolidations;
                 int year = 2022;
-                int month = 4;
+                int month = 9;
                 // ###############################################################################################################
                 List<BuyPattern> patterns;
 

@@ -77,7 +77,7 @@ namespace Multi
                                 {
                                     if (DateTime.Parse(x.Date.ToShortDateString()) <= cc.End)
                                         continue;
-                                    if (DateTime.Parse(x.Date.ToShortDateString()) > cc.End.AddDays(2))
+                                    if (DateTime.Parse(x.Date.ToShortDateString()) > cc.End.AddDays(1))
                                         break;
                                     if (x.Low > p2.Low) continue; // Howwa daa (<) up Trend ... (>) down Trend
                                     x_index = stocks5min.IndexOf(x);
@@ -102,9 +102,9 @@ namespace Multi
                                         int mid = ((x_index - p1_index) / 2) + p1_index;
                                         int quad = ((x_index - p1_index) / 4) + p1_index;
                                         int quart_80 = (((x_index - p1_index) / 5) * 4) + p1_index;
-                                        // // buy
-                                        // if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
-                                        //     continue;
+                                        // buy
+                                        if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
+                                            continue;
                                         if (HighestPoint(stocks5min[(int)mid], x, x_index, x_index, stocks5min) > HighestPoint(p1, stocks5min[(int)mid], x_index, x_index, stocks5min))
                                             continue;
                                         if(findOutliersImp(p1, p2, x, p1_index, p2_index, x_index, crossing, stocks5min) == false)
@@ -644,7 +644,7 @@ namespace Multi
             #endregion
 
             #region Macd calculation
-            List<MacdPoint> macdPoints = MacdCalculator.CalculateMacd(candles, shortPeriod: 12, longPeriod: 26);
+            List<MacdPoint> macdPoints = MacdCalculator.CalculateMacd(candles, 12, 26);
             
             var macdRegressionLine = MacdRegressionCalculator.ComputeLinearRegression(macdPoints);
             #endregion
@@ -1081,6 +1081,7 @@ namespace Multi
                     if (target.Date >= pattern.XX) // For the same timeframe
                     // if (DateTime.Parse(target.Date.ToShortDateString()) >= DateTime.Parse(pattern.X.ToShortDateString())) // For different frames
                     {
+                        
                         // if (firstIndex == 0)
                         //     firstIndex = targetstocks.IndexOf(target);
                         // if (counter == 0)
@@ -1708,12 +1709,13 @@ namespace Multi
             // double target   = penetration + (HighestBefX - penetration) * 0.50;
             // double stoploss = penetration - (HighestBefX - penetration) * 1;
             // double stoploss = x.Low - 0.0005;
-            // double stoploss = penetration - (x.High - x.Low);
-            double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.25; // small frame
-            double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
-            // double stoploss = lowestPnt - 0.0010;
-            // double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.75; // Big frame
-            // double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
+            // small frame
+            // double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.25; // small frame
+            // double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
+            // // Big frame
+            double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
+            double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.50; // Big frame
+            // double stoploss = LowestPoint(start, end, stocks) - 0.0010;
             // double stoploss = support - 0.0020;
             // double target   = penetration * 1.005;
             // double stoploss = LowestPoint(stocks[(int)mid], x, x_index, x_index, stocks) - 0.0005;
