@@ -179,7 +179,7 @@ namespace Multi
         private static bool conditions(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double lowestPnt, double crossing, double tradeopen, List<Stock> stocks, List<Stocks5min> stocks5min, int year)
         {
             if (
-            x.Close > lowestPnt &&
+            // x.Close > lowestPnt &&
             // Quad(p1, x, p1_index, x_index, crossing, 1, stocks5min) > 0 &&
             // x.Close > LowestPoint(p1, x, x_index, x_index, stocks5min) + (HighestPoint(p1, x, x_index, x_index, stocks5min) - LowestPoint(p1, x, x_index, x_index, stocks5min)) * 0.25 &&
             // (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) / (HighestPoint(p2, x, x_index, x_index, stocks)  - p2.Low) > 0.618 &&
@@ -1715,7 +1715,7 @@ namespace Multi
             // // Big frame
             double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
             double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.50; // Big frame
-            // double stoploss = LowestPoint(start, end, stocks) - 0.0010;
+            // double stoploss = LowestPoint(start, end, stocks) - 0.0025;
             // double stoploss = support - 0.0020;
             // double target   = penetration * 1.005;
             // double stoploss = LowestPoint(stocks[(int)mid], x, x_index, x_index, stocks) - 0.0005;
