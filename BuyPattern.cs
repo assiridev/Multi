@@ -39,7 +39,7 @@ namespace Multi
         public static List<BuyPattern> ThePattern(List<Stock> stocks, List<Stocks5min> stocks5min, List<Consolidations> consolidations, List<Stocks5minTar> tar, int year, int month)
         {
             Dictionary<string, double> values = new Dictionary<string, double>();
-            double cancel= 0; 
+            double cancel= 0; int cntr = 0;
             int p1_index; int p2_index; int x_index; double crossing = 0; 
             int p11_index; int p22_index; int xx_index; double innerCrossing = 0;
             
@@ -103,11 +103,11 @@ namespace Multi
                                         int quad = ((x_index - p1_index) / 4) + p1_index;
                                         int quart_80 = (((x_index - p1_index) / 5) * 4) + p1_index;
                                         // // buy
-                                        // if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.10 / x.Close < 0.001)
+                                        // if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
                                         //     continue;
-                                        // // buy big frame
-                                        // if ((HighestPoint(start, end, stocks) - x.Close) * 0.10 / x.Close < 0.001)
-                                        //     continue;
+                                        // buy big frame
+                                        if ((HighestPoint(cc.Start, cc.End, stocks) - x.Close) * 0.25 / x.Close < 0.001)
+                                            continue;
                                         // if (HighestPoint(stocks5min[(int)mid], x, x_index, x_index, stocks5min) > HighestPoint(p1, stocks5min[(int)mid], x_index, x_index, stocks5min))
                                         //     continue;
                                         if(findOutliersImp(p1, p2, x, p1_index, p2_index, x_index, crossing, stocks5min) == false)
@@ -184,7 +184,7 @@ namespace Multi
             if (
             x.Close > lowestPnt &&
             // Quad(p1, x, p1_index, x_index, crossing, 1, stocks5min) > 0 &&
-            // x.Close > LowestPoint(p1, x, x_index, x_index, stocks5min) + (HighestPoint(p1, x, x_index, x_index, stocks5min) - LowestPoint(p1, x, x_index, x_index, stocks5min)) * 0.25 &&
+            // x.Close > LowestPoint(p1, x, x_index, x_index, stocks5min) + (HighestPoint(p1, x, x_index, x_index, stocks5min) - LowestPoint(p1, x, x_index, x_index, stocks5min)) * 0.50 &&
             // (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) / (HighestPoint(p2, x, x_index, x_index, stocks)  - p2.Low) > 0.618 &&
             // (HighestPoint(p2, x, x_index, x_index, stocks) -  p2.Low) / (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) > 0.382 &&
             // x_index - p2_index < (p2_index - p1_index) * 1 &&
@@ -204,7 +204,7 @@ namespace Multi
             // x_index - HighestPoint_index(stocks[((x_index - p1_index) / 2) + p1_index], x, p1_index, x_index, stocks) > 3 &&
             
             
-            // findSupportCntr(p1, p2, x, p1_index, p2_index, x_index, stocks5min) > 1 && // also good but ....
+            // findSupportCntr(p1, p2, x, p1_index, p2_index, x_index, stocks5min) >= 3 && // also good but ....
 
             // quadMacdThis(p1, x, p1_index, x_index, crossing, 0, stocks) > 0 &&
             // quadMacdThis(p1, x, p1_index, x_index, crossing, 1, stocks) < quad(p1, x, p1_index, x_index, crossing, 1, stocks) &&
@@ -1740,14 +1740,16 @@ namespace Multi
             // double stoploss = penetration - (HighestPoint(stocks[(int)quart_80], x, x_index, x_index, stocks) - penetration) * 0.25;
             // double target   = penetration + (HighestBefX - penetration) * 0.50;
             // double stoploss = penetration - (HighestBefX - penetration) * 1;
-            // double stoploss = x.Low - 0.0005;
+            // double stoploss = x.Low - 0.0025;
+            // double target = penetration * 1.01;
+            // double stoploss = penetration * 0.99;
             // // small frame
-            // double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.10; // small frame
+            // double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.25; // small frame
             // double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
             // Big frame
-            double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.75; // Big frame
-            // double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
-            double stoploss = LowestPoint(start, end, stocks) - 0.0010;
+            double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
+            double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.50; // Big frame
+            // double stoploss = LowestPoint(start, end, stocks) - 0.0010;
             // double stoploss = support - 0.0020;
             // double target   = penetration * 1.005;
             // double stoploss = LowestPoint(stocks[(int)mid], x, x_index, x_index, stocks) - 0.0005;

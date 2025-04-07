@@ -70,7 +70,7 @@ namespace Multi
                 #region High / Low // bottoms
                 try
                 {
-                    if (s.Low <= stockList[index - 1].Low && s.Low <= stockList[index + 1].Low)
+                    if (s.Low < stockList[index - 1].Low && s.Low <= stockList[index + 1].Low)
                     {
                         s.Type = "b";
                     }

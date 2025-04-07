@@ -44,7 +44,7 @@ namespace Multi
                     int o2_index = stockList.IndexOf(o2);
                     if (o2.Date >= o1.Date)
                     {
-                        if (o2_index - o1_index >= 5 && o2_index - o1_index <= 20)
+                        if (o2_index - o1_index >= 2 && o2_index - o1_index <= 50) // 10 30
                         {
                 #endregion
                             #region Quad
@@ -54,15 +54,18 @@ namespace Multi
                             // qud1 = Quad(o1, stockList[(int)mid], o1_index, mid, 1, stockList);
                             // qud2 = Quad(stockList[(int)mid], o2, mid, o2_index, 1, stockList);
                             // reg = regLine(o1, o2, stockList);
-                            // qud = Quad(o1, o2, o1_index, o2_index, 1, stockList);
-                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, 1, stockList);
-                            // qudHigh = QuadHigh(o1, o2, o1_index, o2_index, 1, stockList);
-                            support = Support(o1, o2, o1_index, o2_index, stockList);
+                            if (accuCounter(o1, o2, stockList) < (o2_index - o1_index) / 1)
+                                continue;
+                            // support = Support(o1, o2, o1_index, o2_index, stockList);
+                            // qud = Quad(o1, o2, o1_index, o2_index, 1, stockList); // -1
+                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, -1, stockList); // 1
+                            // qudHigh = QuadHigh(o1, o2, o1_index, o2_index, -1, stockList); // 1
                             reg = regLine(o1, o2, stockList);
-                            // if (qud == 1 && (qudLow == 1 || qudHigh == 1))// && o2.Accupoint_2 == 1)// && qud2 == 1)// && support >= 1)//
-                            if (o2.Accupoint_2 == 1 && reg < 0)// && support >= 1)
+                            if (reg < 0)//qud == 0)// && support >= 1)// && (qudLow == 1 || qudHigh == 1) && o2.Accupoint_2 == 1)// && qud2 == 1)// && support >= 1)//
+                            // if (support >= 1 && qud == 1)// && regLine(o1, stockList[(int)mid], stockList) < regLine(stockList[(int)mid], o2, stockList))
+                            // if (o2.Accupoint_2 == 1 && reg > 0)// && support >= 1)
                                 // if (GetConsolidationsBigPic(o1, o2, o1_index, o2_index, lowestP, highestP, o2_index - o1_index, regLow, stockList) == 1)
-                                    consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, lowestP));
+                                consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, lowestP));
                             else
                                 continue;
                             #endregion
@@ -362,7 +365,7 @@ namespace Multi
             var macdRegressionLine = MacdRegressionCalculator.ComputeLinearRegression(macdPoints);
             #endregion
 
-            var regressionLineAvg = LinearRegressionCalculator.ComputeLinearRegression(candles, PriceSelector.Average);
+            var regressionLineAvg = LinearRegressionCalculator.ComputeLinearRegression(candles, PriceSelector.Close);
             var stats = RegressionMetrics.ComputeStats(candles, regressionLineAvg);
             foreach (Stock q in stocks)
             {
@@ -383,8 +386,8 @@ namespace Multi
                 totalBelow = totalBelow + (lineValueAtTime - q.Low);
             }
             if (
-            1 == 1
-            // touching / all >= 1
+            // 1 == 1
+            touching / all >= 1
             // && totalBelow / (totalAbove + totalBelow) > 0.50
             // && touching / all >= 0.50
             // stats.R2 < 0.50
@@ -557,13 +560,19 @@ namespace Multi
                     continue;
                 if (q.Date > x.Date)
                     break;
-                // Console.WriteLine(p1.Date + " : " + x.Date);// + " : " + )
-                xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
-                // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
+                // if (q.Accupoint_2 == 1)
+                // {
+                    xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
+                    // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
+                    yDataList.Add((q.High - q.Low) / 2);
+                    // yDataList.Add(q.Close);
+                // }
+                // xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
+                // // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
                 // yDataList.Add((q.High - q.Low) / 2);
                 // yDataList.Add(q.Close);
                 // yDataList.Add(Convert.ToDouble(q.Low + (lowAg + q.Low) / (index - p0_index)));
-                Console.WriteLine((lowAg + q.Low) / (index - p0_index));
+                // Console.WriteLine((lowAg + q.Low) / (index - p0_index));
             }
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
@@ -674,15 +683,16 @@ namespace Multi
                     // above1 < above2 && //  <
                     // below1 < below2 && //  <
                     // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
-                    // touching / all == 1 &&
+                    // touching / all >= 0.50 &&
                     // above > below
                     // // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_25].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // 1 == 1
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
+                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)lowestCurv_index].Speed)) >
@@ -781,10 +791,13 @@ namespace Multi
                     continue;
                 if (q.Date > x.Date)
                     break;
-                // Console.WriteLine(p1.Date + " : " + x.Date);// + " : " + )
-                xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
-                // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
-                yDataList.Add(q.Low);
+                // if (q.Accupoint_2 == 1)
+                // {
+                    // Console.WriteLine(p1.Date + " : " + x.Date);// + " : " + )
+                    xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
+                    // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
+                    yDataList.Add(q.Low);
+                // }
             }
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
@@ -920,8 +933,9 @@ namespace Multi
                     // torqueTOT > 0.30 &&
                     // torqueTOT1 < torqueTOT2 * 1
                     // torqueTOT1 > 0.30 &&
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) // mid || quart_80
                     bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
+                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)lowestCurv_index].Speed)) >
                     // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
@@ -1012,10 +1026,13 @@ namespace Multi
                     continue;
                 if (q.Date > x.Date)
                     break;
-                // Console.WriteLine(p1.Date + " : " + x.Date);// + " : " + )
-                xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
-                // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
-                yDataList.Add(q.High);
+                // if (q.Accupoint_2 == 1)
+                // {
+                    // Console.WriteLine(p1.Date + " : " + x.Date);// + " : " + )
+                    xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
+                    // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
+                    yDataList.Add(q.High);
+                // }
             }
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
@@ -1142,8 +1159,9 @@ namespace Multi
                     // below1 < below2 && //  <
                     // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
                     // touching / all >= 1 &&
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) // mid || quart_80
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) // mid || quart_80
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
+                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) // mid || quart_80
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)lowestCurv_index].Speed)) >
@@ -1238,7 +1256,7 @@ namespace Multi
             foreach (Stock outlier in stocks)
             {
                 int index = stocks.IndexOf(outlier);
-                if (index < p1_index)// - 40)
+                if (index < p1_index - 30)
                     continue;
                 if (index >= x_index) // p1_index for supports before the pattern
                     break;
@@ -1247,7 +1265,7 @@ namespace Multi
                     if (
                     (outlier.Type == "b" &&
                     x.Low < outlier.Low && x.Close > outlier.Low
-                    && findOutliersX(outlier, x, x_index, stocks) == true)
+                    && findOutliersX(cntr, outlier, p1, x, x_index, stocks) == true) // check empty before X
                     // || 
                     // (outlier.Type == "b" && stocks[lowestIndx].Type == "b"
                     // && stocks[lowestIndx].Low < outlier.Low && stocks[lowestIndx].Close > outlier.Low
@@ -1267,15 +1285,20 @@ namespace Multi
             }
             return supCntr;
         }
-        private static bool findOutliersX(Stock outlier, Stock x, int x_index, List<Stock> stocks5min)
+        private static bool findOutliersX(int cntr, Stock outlier, Stock p1, Stock x, int x_index, List<Stock> stocks)
         {
             int beforeX = 0;
-            foreach (Stock before in Enumerable.Reverse(stocks5min))
+            foreach (Stock before in Enumerable.Reverse(stocks))
             {
-                int index = stocks5min.IndexOf(before);
-                if (before.Date < x.Date)
+                int index = stocks.IndexOf(before);
+                if (before.Date < p1.Date)
+                    break;
+                if (before.Date <= x.Date)
                 {
-                    if (before.Low > outlier.Low// && before.Close > stocks5min[index - 1].Close && before.Close > stocks5min[index + 1].Close
+                    // Console.WriteLine(cntr);
+                    // Console.WriteLine(before.Date);
+                    // Task.Delay(1000).Wait();
+                    if (before.Low > outlier.Low// && before.Close > stocks[index - 1].Close && before.Close > stocks[index + 1].Close
                     && beforeX == 0
                     )
                         // beforeX = 1;
@@ -1284,7 +1307,7 @@ namespace Multi
                     && beforeX == 0
                     )
                         return false;
-                    // if (before.Low <= (p1.Low - (p1.Low - p2.Low) / (p2_index - p1_index) * (stocks5min.IndexOf(before) - p1_index))
+                    // if (before.Low <= (p1.Low - (p1.Low - p2.Low) / (p2_index - p1_index) * (stocks.IndexOf(before) - p1_index))
                     // && beforeX == 1
                     // )
                     // {
@@ -1293,6 +1316,21 @@ namespace Multi
                 }
             }
             return false;
+        }
+
+        private static double accuCounter(Stock from, Stock to, List<Stock> stocks)
+        {
+            int cntr = 0;
+            foreach (Stock q in stocks)
+            {
+                if (q.Date < from.Date)
+                    continue;
+                if (q.Date > to.Date)
+                    break;
+                if (q.Accupoint_2 == 1)
+                    cntr = cntr + 1;
+            }
+            return cntr;
         }
 
         private static double HighestPoint(Stock from, Stock to, List<Stock> stocks)
