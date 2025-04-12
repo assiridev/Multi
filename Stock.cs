@@ -102,6 +102,8 @@ namespace Multi
                             lowestHigh = o2.High;
                         if (o2.Low >= highestLow)
                             highestLow = o2.Low;
+                        // if (o2_index - o1_index > 1)
+                        //     break;
                         if (o2_index - o1_index >= 2)// && lowestHigh > highestLow) // more than 2 candles
                         // if (1 == 1)
                         {
