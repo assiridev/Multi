@@ -55,25 +55,25 @@ namespace Multi
                             // quad close
                             // signal = SignalLine(o1, o2, stockList);
                             // reg = regLine(o1, o2, stockList);
-                            // if (accuCounter(o1, o2, stockList) < (o2_index - o1_index + 1) / 2)
+                            // if (accuCounter(o1, o2, stockList) < (o2_index - o1_index + 1) / 3)
+                            //     continue;
+                            // if (CndlPassCounter(o1, o2, stockList) < (o2_index - o1_index + 1) / 2)
                             //     continue;
                             // mid = o1_index + (o2_index - o1_index) / 2;
                             // qud1 = QuadLow(o1, stockList[(int)mid], o1_index, mid, -1, stockList);
                             // qud2 = QuadLow(stockList[(int)mid], o2, mid, o2_index, -1, stockList);
-                            if (accuCounter(o1, o2, stockList) < 5)
+                            if (accuCounter(o1, o2, stockList) < 3)
                                 continue;
-                            if (CndlPassCounter(o1, o2, stockList) < (o2_index - o1_index + 1) / 2)
-                                continue;
-                            support = Support(o1, o2, o1_index, o2_index, stockList);
-                            // qud = Quad(o1, o2, o1_index, o2_index, -1, stockList); // -1
-                            qudup = QuadUp(o1, o2, o1_index, o2_index, 1, stockList); // -1
-                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, -1, stockList); // 1
-                            // qudHigh = QuadHigh(o1, o2, o1_index, o2_index, -1, stockList); // 1
+                            // support = Support(o1, o2, o1_index, o2_index, stockList);
+                            qud = Quad(o1, o2, o1_index, o2_index, 1, stockList); // -1
+                            // qudup = QuadUp(o1, o2, o1_index, o2_index, 1, stockList); // -1
+                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, 1, stockList); // 1
+                            // qudHigh = QuadHigh(o1, o2, o1_index, o2_index, 1, stockList); // 1
                             // reg = regLine(o1, o2, stockList); // && support >= 1 
-                            // if (qud == 1 && (qudLow == 1 || qudHigh == 1))// && o2.Accupoint_2 == 1)// && qud2 == 1)// && support >= 1)//
-                            if (support >= 1 && /*qud == 1 &&*/ qudup == 1)// && o2.Accupoint_2 == 1)// && regLine(o1, stockList[(int)mid], stockList) < regLine(stockList[(int)mid], o2, stockList))
+                            // if (qud == 1 && (qudLow == 1 || qudHigh == 1) && o2.Accupoint_2 == 0)// && qud2 == 1)// && support >= 1)//
+                            // if (support >= 1 && qud == 1 && o2.Accupoint_2 == 1)// && qudup == 1)// && o2.Accupoint_2 == 1)// && qudup == 1)// && o2.Accupoint_2 == 1)// && regLine(o1, stockList[(int)mid], stockList) < regLine(stockList[(int)mid], o2, stockList))
                             // if (o2.Accupoint_2 == 1 && reg > 0)// && support >= 1)
-                            // if (qud1 == 1 && qud2 == 1 && o1.Low < o2.Low)
+                            if (qud == 1)// && qudup == 1 && support >= 1)// && o2.Accupoint_2 == 1)// && o1.Low < o2.Low)
                                 // if (GetConsolidationsBigPic(o1, o2, o1_index, o2_index, lowestP, highestP, o2_index - o1_index, regLow, stockList) == 1)
                                 consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, lowestP));
                             else
@@ -522,6 +522,7 @@ namespace Multi
             double above1 = 0; double below1 = 0;
             double above2 = 0; double below2 = 0;
             double belowPer = 0;  double lowAg= 0;
+            double highest = 0; double lowest = 10000;
             double lowestCurv = 10000; int lowestCurv_index = 0;
             int mid = ((x_index - p0_index) / 2) + p0_index;
             int quart_25 = (((x_index - p0_index) / 4) * 1) + p0_index;
@@ -660,7 +661,13 @@ namespace Multi
                             lowestCurv_index = stocks.IndexOf(q);
                         }
                         if (q.High > yValue && q.Low < yValue)
+                        {
                             touching = touching + 1;
+                            if (q.Low <= lowest)
+                                lowest = q.Low;
+                            if (q.High >= highest)
+                                highest = q.High;
+                        }
                         above = above + (q.High - yValue);
                         below = below + (yValue - q.Low);
                         if (index <= mid)
@@ -687,25 +694,32 @@ namespace Multi
                     #endregion
 
                     if (
+                    touching / all >= 0.70 &&
+                    x.Close < lowest + (highest - lowest) * 0.25 &&
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) &&
+                    lowestCurv_index == x_index
                     // above < below * 1.382 && // goooooood
                     // above1 > below1 && //  >
                     // above2 > below2 && //  >
                     // above1 < above2 && //  <
                     // below1 < below2 && //  <
                     // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
-                    // touching / all >= 0.50 &&
                     // above > below
                     // // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_25].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // 1 == 1
-                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
-                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
+                    // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
 
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_25].Speed))
-                    && bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_25].Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
 
                     // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // && (bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(x.Speed))) >
+                    // (bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) - bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)lowestCurv_index].Speed))) * 3
+                    // && lowestCurv_index != x_index
+                    // lowestCurv_index == x_index
 
                     // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
@@ -915,7 +929,7 @@ namespace Multi
                     #endregion
 
                     if (
-                    // above < below * 1.382 && // goooooood
+                    above > below * 1 && // goooooood
                     // above1 > below1 && //  >
                     // above2 > below2 && //  >
                     // above1 < above2 && //  <
@@ -1175,7 +1189,7 @@ namespace Multi
                     // torqueTOT > 0.30 &&
                     // torqueTOT1 < torqueTOT2 * 1
                     // torqueTOT1 > 0.30 &&
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) < bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
