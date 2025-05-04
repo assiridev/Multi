@@ -100,11 +100,9 @@ namespace Multi
                 //             if (o2.Low >= highestLow)
                 //                 highestLow = o2.Low;
                 //             if (o2_index - o1_index >= 2)// && lowestHigh > highestLow) // more than 2 candles
-                //             // if (1 == 1)
                 //             {
-                //                 if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total > 0.50)// && n == 1)
+                //                 if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total > 0.50)
                 //                 {
-                //                     // o1.Accupoint_1 = 1;
                 //                     o2.Accupoint_2 = 1;
                 //                     o1.TotalAccuPnt = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
                 //                     o2.TotalAccuPnt = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
@@ -113,18 +111,6 @@ namespace Multi
                 //                 {
                 //                     o2.Accupoint_2 = 0;
                 //                 }
-                //                 // if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total >= accuScore && n == 0)
-                //                 // {
-                //                 //     accuScore = (lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total;
-                //                 // }
-                //                 // else if ((lowestHigh - highestLow) * (o2_index - o1_index + 1) / o2Total < accuScore && n == 0)
-                //                 // {
-                //                 //     o1.Accupoint_1 = 1;
-                //                 //     stockList[o2_index - 1].Accupoint_2 = 1;
-                //                 //     // Console.WriteLine(o2.Date);
-                //                 //     // Console.WriteLine(o1.Date);
-                //                 //     continue;
-                //                 // }
                 //             }
                 //         }
                 //     }

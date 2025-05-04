@@ -83,7 +83,7 @@ namespace Multi
                                     x_index = stocks5min.IndexOf(x);
                                     // if (stocks5min[x_index - 1].Accupoint_2 != 1) // to make sure before x there is an accu
                                     //     continue;
-                                    // if (x.Accupoint_2 == 1) { x_index = stocks.IndexOf(x); } else { continue; }
+                                    // if (x.Accupoint_2 == 1) { x_index = stocks5min.IndexOf(x); } else { continue; }
                                     // check the trend
                                     if (x_index - p1_index < 20) // 5 daily
                                         continue;
@@ -102,12 +102,12 @@ namespace Multi
                                         int mid = ((x_index - p1_index) / 2) + p1_index;
                                         int quad = ((x_index - p1_index) / 4) + p1_index;
                                         int quart_80 = (((x_index - p1_index) / 5) * 4) + p1_index;
-                                        // // buy
-                                        // if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
-                                        //     continue;
-                                        // buy big frame
-                                        if ((HighestPoint(cc.Start, cc.End, stocks) - x.Close) * 0.25 / x.Close < 0.001)
+                                        // buy small frame
+                                        if ((HighestPoint(p1, x, x_index, x_index, stocks5min) - x.Close) * 0.25 / x.Close < 0.001)
                                             continue;
+                                        // // buy big frame
+                                        // if ((HighestPoint(cc.Start, cc.End, stocks) - x.Close) * 0.25 / x.Close < 0.001)
+                                        //     continue;
                                         // if (HighestPoint(stocks5min[(int)mid], x, x_index, x_index, stocks5min) > HighestPoint(p1, stocks5min[(int)mid], x_index, x_index, stocks5min))
                                         //     continue;
                                         if(findOutliersImp(p1, p2, x, p1_index, p2_index, x_index, crossing, stocks5min) == false)
@@ -182,7 +182,7 @@ namespace Multi
         private static bool conditions(Stocks5min p1, Stocks5min p2, Stocks5min x, int p1_index, int p2_index, int x_index, double lowestPnt, double crossing, double tradeopen, List<Stock> stocks, List<Stocks5min> stocks5min, int year)
         {
             if (
-            x.Close > lowestPnt &&
+            // x.Close < lowestPnt &&
             // Quad(p1, x, p1_index, x_index, crossing, 1, stocks5min) > 0 &&
             // x.Close > LowestPoint(p1, x, x_index, x_index, stocks5min) + (HighestPoint(p1, x, x_index, x_index, stocks5min) - LowestPoint(p1, x, x_index, x_index, stocks5min)) * 0.50 &&
             // (HighestPoint(p1, p2, x_index, x_index, stocks) - p2.Low) / (HighestPoint(p2, x, x_index, x_index, stocks)  - p2.Low) > 0.618 &&
@@ -467,7 +467,7 @@ namespace Multi
             empty2Per = empty2 / (empty2 + totalBelow);
             if (
             BtmsCntr >= 0 // (x_index - p1_index) > 0.60
-            // && abovePer > 0.50
+            // && abovePer > 0.80
             // && empty1Per > 0.50 // > 0.50 good alone with btmsCntr > 0.70 is good also
 
 
@@ -1743,12 +1743,12 @@ namespace Multi
             // double stoploss = x.Low - 0.0025;
             // double target = penetration * 1.01;
             // double stoploss = penetration * 0.99;
-            // // small frame
-            // double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
-            // double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.25; // small frame
+            // small frame
+            double target   = penetration + (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
+            double stoploss = penetration - (HighestPoint(p1, x, x_index, x_index, stocks5min) - penetration) * 0.50; // small frame
             // // Big frame
-            double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
-            double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.50; // Big frame
+            // double target   = penetration + (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
+            // double stoploss = penetration - (HighestPoint(start, end, stocks) - penetration) * 0.25; // Big frame
             // double stoploss = LowestPoint(start, end, stocks) - 0.0010;
             // double stoploss = x.Low - 0.0010;
             // double target   = penetration * 1.005;

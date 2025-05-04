@@ -28,7 +28,7 @@ namespace Multi
                 double support = 0;
                 double qud = 0; double qudup = 0;
                 double qud1 = 0; int mid = 0;
-                double qud2 = 0; 
+                double qud2 = 0;
                 double qudLow = 0;
                 double qudHigh = 0;
                 double signal = 0;
@@ -39,16 +39,16 @@ namespace Multi
                 #region Loops
                 foreach (Stock o2 in stockList) // second loooooooop
                 {
-                    highestP = HighestPoint(o1, o2, stockList);
-                    lowestP = LowestPoint(o1, o2, stockList);
                     int o2_index = stockList.IndexOf(o2);
-                    if (o2.Date >= o1.Date)
+                    if (o2.Date > o1.Date)
                     {
+                        highestP = HighestPoint(o1, o2, stockList);
+                        lowestP = LowestPoint(o1, o2, stockList);
                         // if (o2_index - o1_index > 10)
                         //     break;
                         // if (o2_index - o1_index < 6)
                         //     continue;
-                        if (o2_index - o1_index > 5)// && o2_index - o1_index <= 10) // 10 30
+                        if (o2_index - o1_index >= 5)// && o2_index - o1_index <= 10) // 10 30
                         {
                 #endregion
                             #region Quad
@@ -62,20 +62,22 @@ namespace Multi
                             // mid = o1_index + (o2_index - o1_index) / 2;
                             // qud1 = QuadLow(o1, stockList[(int)mid], o1_index, mid, -1, stockList);
                             // qud2 = QuadLow(stockList[(int)mid], o2, mid, o2_index, -1, stockList);
-                            if (accuCounter(o1, o2, stockList) < 3)
+                            if (accuCounter(o1, o2, stockList) < 5)// / (o2_index - o1_index + 1) < 0.50)
                                 continue;
+                            // if (accuCounter(o1, o2, stockList) / (o2_index - o1_index + 1) < 0.70)
+                            //     continue;
                             // support = Support(o1, o2, o1_index, o2_index, stockList);
                             qud = Quad(o1, o2, o1_index, o2_index, 1, stockList); // -1
                             // qudup = QuadUp(o1, o2, o1_index, o2_index, 1, stockList); // -1
-                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, 1, stockList); // 1
+                            // qudLow = QuadLow(o1, o2, o1_index, o2_index, -1, stockList); // 1
                             // qudHigh = QuadHigh(o1, o2, o1_index, o2_index, 1, stockList); // 1
-                            // reg = regLine(o1, o2, stockList); // && support >= 1 
+                            // reg = regLine(o1, o2, stockList); // && support >= 1
                             // if (qud == 1 && (qudLow == 1 || qudHigh == 1) && o2.Accupoint_2 == 0)// && qud2 == 1)// && support >= 1)//
                             // if (support >= 1 && qud == 1 && o2.Accupoint_2 == 1)// && qudup == 1)// && o2.Accupoint_2 == 1)// && qudup == 1)// && o2.Accupoint_2 == 1)// && regLine(o1, stockList[(int)mid], stockList) < regLine(stockList[(int)mid], o2, stockList))
                             // if (o2.Accupoint_2 == 1 && reg > 0)// && support >= 1)
-                            if (qud == 1)// && qudup == 1 && support >= 1)// && o2.Accupoint_2 == 1)// && o1.Low < o2.Low)
+                            if (qud == 1 && o2.Accupoint_2 == 1)// && support >= 1)// && reg < 0)// && support >= 1)// && reg > 0)// && qudup == 1 && support >= 1)// && o2.Accupoint_2 == 1)// && o1.Low < o2.Low)
                                 // if (GetConsolidationsBigPic(o1, o2, o1_index, o2_index, lowestP, highestP, o2_index - o1_index, regLow, stockList) == 1)
-                                consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, lowestP));
+                                consolidations.Add(new Consolidations(o1.Name, o1.Date, o2.Date, o2.Close));
                             else
                                 continue;
                             #endregion
@@ -371,7 +373,7 @@ namespace Multi
 
             #region Macd calculation
             List<MacdPoint> macdPoints = MacdCalculator.CalculateMacd(candles, 12, 26);
-            
+
             var macdRegressionLine = MacdRegressionCalculator.ComputeLinearRegression(macdPoints);
             #endregion
 
@@ -397,8 +399,8 @@ namespace Multi
             }
             if (
             // 1 == 1
-            touching / all >= 1
-            && totalBelow / (totalAbove + totalBelow) > 0.50
+            touching / all >= 0.70
+            // && totalBelow / (totalAbove + totalBelow) > 0.50
             // && touching / all >= 0.50
             // stats.R2 < 0.50
             // stats.MSE < 0.01
@@ -431,7 +433,7 @@ namespace Multi
 
             #region Macd calculation
             List<MacdPoint> macdPoints = MacdCalculator.CalculateMacd(candles, 12, 26);
-            
+
             var macdRegressionLine = MacdRegressionCalculator.ComputeLinearRegression(macdPoints);
             #endregion
 
@@ -479,7 +481,7 @@ namespace Multi
 
             #region Macd calculation
             List<MacdPoint> macdPoints = MacdCalculator.CalculateMacd(candles, 12, 26);
-            
+
             var macdRegressionLine = MacdRegressionCalculator.ComputeLinearRegression(macdPoints);
             #endregion
 
@@ -510,13 +512,14 @@ namespace Multi
                 return 0;
         }
         #endregion
-        
-        
+
+
         #region Quads
 
         public static double Quad(Stock p0, Stock x, int p0_index, int x_index, double concav, List<Stock> stocks)
         {
             #region Vars
+            int prevInd = 0; double md = 0;
             double all = 0; double touching = 0;;
             double above = 0; double below = 0;
             double above1 = 0; double below1 = 0;
@@ -530,7 +533,7 @@ namespace Multi
             List<double> xDataList = new List<double>();
             List<double> yDataList = new List<double>();
             #endregion
-            
+
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
             // List<Tuple<DateTime, double>> prices = new List<Tuple<DateTime, double>>();
@@ -567,17 +570,29 @@ namespace Multi
             foreach (Stock q in stocks)
             {
                 int index = stocks.IndexOf(q);
-                if (q.Date <= p0.Date)
+                if (q.Date < p0.Date)
                     continue;
                 if (q.Date > x.Date)
                     break;
-                // if (q.Accupoint_2 == 1)
-                // {
+                if (q.Accupoint_1 == 1)
+                {
                     xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
                     // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
+                    // yDataList.Add(Math.Max(q.Open, q.Close) - ((Math.Max(q.Open, q.Close) - Math.Min(q.Open, q.Close)) * 0.50)); // Second column (_close)
                     // yDataList.Add((q.High - q.Low));
                     yDataList.Add(q.Close);
+                    // yDataList.Add(1);
+                    // yDataList.Add(index - prevInd);
+                    // prevInd = index;
+                    // yDataList.Add(q.Low - md);
+                    // md = q.Low;
+                }
+                // else
+                // {
+                //     xDataList.Add(Convert.ToDouble(q.Speed));
+                //     yDataList.Add(-1);
                 // }
+
                 // xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
                 // // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
                 // yDataList.Add((q.High - q.Low) / 2);
@@ -588,9 +603,9 @@ namespace Multi
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
-            
+
             #endregion
-            
+
             #region Kitchen
             // Determine the best polynomial degree using BIC
             // Adjust the concavity (e.g., double the curvature)
@@ -694,15 +709,12 @@ namespace Multi
                     #endregion
 
                     if (
-                    touching / all >= 0.70 &&
-                    x.Close < lowest + (highest - lowest) * 0.25 &&
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed)) &&
-                    lowestCurv_index == x_index
-                    // above < below * 1.382 && // goooooood
-                    // above1 > below1 && //  >
-                    // above2 > below2 && //  >
-                    // above1 < above2 && //  <
-                    // below1 < below2 && //  <
+                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    && 
+                    ((lowestCurv_index != x_index && above > below) || (lowestCurv_index == x_index && above < below))
+                    
+                    // touching / all >= 0.80 &&
+                    // x.Close < lowest + (highest - lowest) * 0.25 &&
                     // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
                     // above > below
                     // // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
@@ -763,6 +775,7 @@ namespace Multi
             double above = 0; double below = 0;
             double above1 = 0; double below1 = 0;
             double above2 = 0; double below2 = 0;
+            double highest = 0; double lowest = 10000;
             double belowPer = 0;  double lowAg= 0;
             double lowestCurv = 10000; int lowestCurv_index = 0;
             int mid = ((x_index - p0_index) / 2) + p0_index;
@@ -771,7 +784,7 @@ namespace Multi
             List<double> xDataList = new List<double>();
             List<double> yDataList = new List<double>();
             #endregion
-            
+
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
             // List<Tuple<DateTime, double>> prices = new List<Tuple<DateTime, double>>();
@@ -808,17 +821,17 @@ namespace Multi
             foreach (Stock q in stocks)
             {
                 int index = stocks.IndexOf(q);
-                if (q.Date <= p0.Date)
+                if (q.Date < p0.Date)
                     continue;
                 if (q.Date > x.Date)
                     break;
-                if (q.Accupoint_2 == 1)
-                {
+                // if (q.Accupoint_2 == 1)
+                // {
                     xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
                     // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
                     // yDataList.Add((q.High - q.Low));
                     yDataList.Add(q.Close);
-                }
+                // }
                 // xDataList.Add(Convert.ToDouble(q.Speed)); // First column (unixdatetime)
                 // // yDataList.Add(q.High - ((q.High - q.Low) * 0.50)); // Second column (_close)
                 // yDataList.Add((q.High - q.Low) / 2);
@@ -829,9 +842,9 @@ namespace Multi
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
-            
+
             #endregion
-            
+
             #region Kitchen
             // Determine the best polynomial degree using BIC
             // Adjust the concavity (e.g., double the curvature)
@@ -902,7 +915,13 @@ namespace Multi
                             lowestCurv_index = stocks.IndexOf(q);
                         }
                         if (q.High > yValue && q.Low < yValue)
-                            touching = touching + 1;
+                            {
+                                touching = touching + 1;
+                                if (q.Low <= lowest)
+                                    lowest = q.Low;
+                                if (q.High >= highest)
+                                    highest = q.High;
+                            }
                         above = above + (q.High - yValue);
                         below = below + (yValue - q.Low);
                         if (index <= mid)
@@ -929,13 +948,14 @@ namespace Multi
                     #endregion
 
                     if (
-                    above > below * 1 && // goooooood
+                    // above > below * 1 && // goooooood
                     // above1 > below1 && //  >
                     // above2 > below2 && //  >
                     // above1 < above2 && //  <
                     // below1 < below2 && //  <
                     // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
-                    // touching / all >= 0.50 &&
+                    touching / all >= 0.70 &&
+                    // x.Close < lowest + (highest - lowest) * 0.30 &&
                     // above > below
                     // // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)quart_25].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
@@ -1006,7 +1026,7 @@ namespace Multi
             List<double> xDataList = new List<double>();
             List<double> yDataList = new List<double>();
             #endregion
-            
+
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
             // List<Tuple<DateTime, double>> prices = new List<Tuple<DateTime, double>>();
@@ -1058,9 +1078,9 @@ namespace Multi
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
-            
+
             #endregion
-            
+
             #region Kitchen
             // Determine the best polynomial degree using BIC
             // Adjust the concavity (e.g., double the curvature)
@@ -1179,17 +1199,18 @@ namespace Multi
                     #endregion
 
                     if (
+                    1 == 1
                     // above < below * 1.382 && // goooooood
                     // above1 > below1 && //  >
                     // above2 > below2 && //  >
                     // above1 < above2 && //  <
                     // below1 < below2 && //  <
-                    // x.High < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50 &&
+                    // x.Close < LowestPoint(p0, x, stocks) + (HighestPoint(p0, x, stocks) - LowestPoint(p0, x, stocks)) * 0.50
                     // touching / all >= 1 &&
                     // torqueTOT > 0.30 &&
                     // torqueTOT1 < torqueTOT2 * 1
                     // torqueTOT1 > 0.30 &&
-                    bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
+                    // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
                     // && bestModel.GetCurveValue(Convert.ToDouble(stocks[(int)mid].Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
@@ -1234,14 +1255,14 @@ namespace Multi
             double above1 = 0; double below1 = 0;
             double above2 = 0; double below2 = 0;
             double emptyBelow = 0; double emptyAbove = 0;
-            double belowPer = 0; 
+            double belowPer = 0;
             double lowestCurv = 10000; int lowestCurv_index = 0;
             int mid = ((x_index - p0_index) / 2) + p0_index;
             int quart_80 = (((x_index - p0_index) / 5) * 4) + p0_index;
             List<double> xDataList = new List<double>();
             List<double> yDataList = new List<double>();
             #endregion
-            
+
             #region PolyNomial by Macd
             // MACDCalculator macdCalculator = new MACDCalculator();
             // List<Tuple<DateTime, double>> prices = new List<Tuple<DateTime, double>>();
@@ -1293,9 +1314,9 @@ namespace Multi
              // Convert lists to arrays
             double[] xData = xDataList.ToArray();
             double[] yData = yDataList.ToArray();
-            
+
             #endregion
-            
+
             #region Kitchen
             // Determine the best polynomial degree using BIC
             // Adjust the concavity (e.g., double the curvature)
@@ -1480,7 +1501,7 @@ namespace Multi
 
             #endregion
 
-            var regressionLineAvg = LinearRegressionCalculator.ComputeLinearRegression(candles, PriceSelector.Average);
+            var regressionLineAvg = LinearRegressionCalculator.ComputeLinearRegression(candles, PriceSelector.Close);
             foreach (Stock q in stocks)
             {
                 int index = stocks.IndexOf(q);
@@ -1493,17 +1514,18 @@ namespace Multi
                 if (q.High > lineValueAtTime && q.Low < lineValueAtTime)
                     touching = touching + 1;
             }
-            // if (
-            // signalRegLine.Slope > 0 //&& touching / all <= 0.50
-            // // macdRegressionLine.Slope > 0// && touching / all == 1
-            // // && macdRegressionLine.Slope < 0 && touching / all > 0.60
-            // // && macdRegressionLine.Slope - regressionLineAvg.Slope > 0
-            // // if (regressionLineAvg.Slope < 0 && macdRegressionLine.Slope < 0 //&& touching / all < 0.10
-            // // && macdRegressionLine.Slope < regressionLineAvg.Slope
-            // )
+            if (
+            // signalRegLine.Slope > 0 //&&
+            touching / all >= 0.80
+            // macdRegressionLine.Slope > 0// && touching / all == 1
+            // && macdRegressionLine.Slope < 0 && touching / all > 0.60
+            // && macdRegressionLine.Slope - regressionLineAvg.Slope > 0
+            // if (regressionLineAvg.Slope < 0 && macdRegressionLine.Slope < 0 //&& touching / all < 0.10
+            // && macdRegressionLine.Slope < regressionLineAvg.Slope
+            )
             return signalRegLine.Slope;
-            // else
-            //     return 0;
+            else
+                return 0;
         }
         public static double Support(Stock p1, Stock x, int p1_index, int x_index, List<Stock> stocks)
         {
@@ -1513,7 +1535,7 @@ namespace Multi
             foreach (Stock outlier in stocks)
             {
                 int index = stocks.IndexOf(outlier);
-                if (index < p1_index)// - 30)
+                if (index < p1_index - 20)
                     continue;
                 // if (index > mid)
                 //     break;
@@ -1525,7 +1547,7 @@ namespace Multi
                     (outlier.Type == "b" &&
                     x.Low < outlier.Low && x.Close > outlier.Low
                     && findOutliersX(cntr, outlier, p1, x, x_index, stocks) == true) // check empty before X
-                    // || 
+                    // ||
                     // (outlier.Type == "b" && stocks[lowestIndx].Type == "b"
                     // && stocks[lowestIndx].Low < outlier.Low && stocks[lowestIndx].Close > outlier.Low
                     // && findOutliersX(outlier, x, x_index, stocks) == true)
@@ -1540,7 +1562,7 @@ namespace Multi
                         // }
                     }
                 }
-                
+
             }
             return supCntr;
         }
@@ -1586,10 +1608,11 @@ namespace Multi
                     continue;
                 if (q.Date > to.Date)
                     break;
-                if (q.Accupoint_2 == 1 && q.Low < accuLow)
+                if (q.Accupoint_2 == 1)// && q.Low < accuLow)
                 {
                     cntr = cntr + 1;
-                    accuLow = q.Low;
+                    // accuLow = q.Low;
+                    q.Accupoint_1 = 1;
                 }
             }
             return cntr;
@@ -1659,6 +1682,6 @@ namespace Multi
             return this.Name.CompareTo(that.Name);
         }
 
-        
+
     }
 }

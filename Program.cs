@@ -89,8 +89,8 @@ namespace Multi
                 List<Stocks5min> targetstocks;
                 List<Stocks5minTar> targetstocksTar;
                 List<Consolidations> consolidations;
-                int year = 2014; 
-                int month = 10;
+                int year = 2022;
+                int month = 11;
                 // ###############################################################################################################
                 List<BuyPattern> patterns;
 

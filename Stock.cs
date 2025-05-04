@@ -38,7 +38,7 @@ namespace Multi
             // using (SqlCommand command = new SqlCommand("SELECT TOP 10000000000 * FROM [datain1hourallSTK] WHERE year([_datetime]) = '" + year + "' and month([_datetime]) = '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             // Oanda Tbl
             // and month([_datetime]) <= '" + month + "'
-            using (SqlCommand command = new SqlCommand("SELECT TOP 70 * FROM [OandaTbl] WHERE year([_datetime]) <= '" + year + "' and month([_datetime]) <= '" + month + "' and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
+            using (SqlCommand command = new SqlCommand("SELECT TOP 70 * FROM [OandaTbl] WHERE (year([_datetime]) < '" + year + "' or year([_datetime]) = '" + year + "' and month([_datetime]) <= '" + month + "') and symbol = '" + symbol + "' ORDER BY 3 DESC", connection))
             {
                 connection.Open();
                 using (SqlDataReader reader = command.ExecuteReader())
