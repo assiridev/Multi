@@ -62,10 +62,10 @@ namespace Multi
                             // mid = o1_index + (o2_index - o1_index) / 2;
                             // qud1 = QuadLow(o1, stockList[(int)mid], o1_index, mid, -1, stockList);
                             // qud2 = QuadLow(stockList[(int)mid], o2, mid, o2_index, -1, stockList);
-                            if (accuCounter(o1, o2, stockList) < 5)// / (o2_index - o1_index + 1) < 0.50)
+                            if (accuCounter(o1, o2, stockList) < 5)
                                 continue;
-                            // if (accuCounter(o1, o2, stockList) / (o2_index - o1_index + 1) < 0.70)
-                            //     continue;
+                            if (accuCounter(o1, o2, stockList) / (o2_index - o1_index + 1) > 0.30)
+                                continue;
                             // support = Support(o1, o2, o1_index, o2_index, stockList);
                             qud = Quad(o1, o2, o1_index, o2_index, 1, stockList); // -1
                             // qudup = QuadUp(o1, o2, o1_index, o2_index, 1, stockList); // -1
@@ -519,6 +519,7 @@ namespace Multi
         public static double Quad(Stock p0, Stock x, int p0_index, int x_index, double concav, List<Stock> stocks)
         {
             #region Vars
+            int i = 1000;
             int prevInd = 0; double md = 0;
             double all = 0; double touching = 0;;
             double above = 0; double below = 0;
@@ -581,7 +582,7 @@ namespace Multi
                     // yDataList.Add(Math.Max(q.Open, q.Close) - ((Math.Max(q.Open, q.Close) - Math.Min(q.Open, q.Close)) * 0.50)); // Second column (_close)
                     // yDataList.Add((q.High - q.Low));
                     yDataList.Add(q.Close);
-                    // yDataList.Add(1);
+                    // yDataList.Add(i);
                     // yDataList.Add(index - prevInd);
                     // prevInd = index;
                     // yDataList.Add(q.Low - md);
@@ -710,8 +711,8 @@ namespace Multi
 
                     if (
                     bestModel.GetCurveValue(Convert.ToDouble(p0.Speed)) > bestModel.GetCurveValue(Convert.ToDouble(x.Speed))
-                    && 
-                    ((lowestCurv_index != x_index && above > below) || (lowestCurv_index == x_index && above < below))
+                    // && 
+                    // ((lowestCurv_index != x_index && above > below) || (lowestCurv_index == x_index && above < below))
                     
                     // touching / all >= 0.80 &&
                     // x.Close < lowest + (highest - lowest) * 0.25 &&
